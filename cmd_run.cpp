@@ -1,6 +1,8 @@
 #include <string>
 #include <map>
 
+#include <blake2.h>
+
 #include <hoytech/protected_queue.h>
 
 #include "ephemerand/ublox.h"
@@ -44,6 +46,21 @@ bool check_sats(SatTable &sats) {
 }
 
 
+std::string hash_almanac(SatTable &sats) {
+    std::string fullAlmanac;
+
+    for (auto &[svprn, sat] : sats) {
+        (void) svprn;
+        fullAlmanac += sat.almanac;
+    }
+
+    uint8_t hash[32];
+
+    blake2b(hash, reinterpret_cast<uint8_t*>(fullAlmanac.data()), nullptr, sizeof(hash), fullAlmanac.size(), 0);
+
+    return std::string(reinterpret_cast<char*>(hash), sizeof(hash));
+}
+
 
 void cmd_run(std::string device, bool verbose) {
     ephemerand::Ublox ub(device);
@@ -53,9 +70,6 @@ void cmd_run(std::string device, bool verbose) {
 
 
     SatTable sats;
-
-
-
 
 
     while(1) {
@@ -77,23 +91,9 @@ void cmd_run(std::string device, bool verbose) {
 
             sats[m->svprn] = { m->svprn, m->issue_week, toa, m->data };
 
-            if (check_sats(sats)) std::cout << "GOOD TO GO" << std::endl;
-
-/*
-            uint32_t *words = reinterpret_cast<uint32_t*>(m->data.data());
-            double e = (double)(words[0] & 0xFFFF) * P2_21;
-            double sqrta = (double)(words[3] & 0xFFFFFF) * P2_11;
-            double deltai = (double)(words[1] & 0xFFFF) * P2_19 * SC2RAD;
-            double i0 = 0.3*SC2RAD + deltai;
-
-            std::cout << "  e = " << e << "  sqrta = " << sqrta << " i0 = " << i0 << std::endl;
-*/
-/*
-    auto buff = m->data.data();
-    double e = getbitu(buff,32,16)*P2_21;
-    double toas = getbitu(buff,16, 8)*4096.0;
-    std::cout << ": e = " << e << " toas = " << toas << std::endl;
-*/
+            if (check_sats(sats)) {
+                std::cout << "rand " << to_hex(hash_almanac(sats)) << " " << m->issue_week << " " << toa << std::endl;
+            }
         }
     }
 }

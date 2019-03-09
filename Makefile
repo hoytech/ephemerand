@@ -4,7 +4,7 @@ STD      = -std=c++17
 CXXFLAGS = $(STD) $(OPT) $(W) -fPIC $(XCXXFLAGS)
 INCS     = -Iinclude -Iminiserial -Ihoytech-cpp
 
-LDLIBS   = -ldocopt -lpthread
+LDLIBS   = -lpthread -ldocopt -lb2
 LDFLAGS  = -flto $(XLDFLAGS)
 
 SRCS     = ephemerand.cpp util.cpp \

@@ -35,7 +35,7 @@ int parse_command_line(int argc, char **argv) {
         if (args["--device"]) device = args["--device"].asString();
 
         bool verbose = false;
-        if (args["--verbose"]) verbose = true;
+        if (args["--verbose"]) verbose = args["--verbose"].asBool();
 
         ephemerand::cmd_run(device, verbose);
     } else if (args["decode-gps-time"].asBool()) {

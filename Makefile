@@ -8,7 +8,7 @@ LDLIBS   = -lpthread -ldocopt -lb2
 LDFLAGS  = -flto $(XLDFLAGS)
 
 SRCS     = ephemerand.cpp util.cpp \
-           miniserial/serial.cpp \
+           miniserial/serial.cpp hoytech-cpp/timer.cpp \
            cmd_run.cpp cmd_reset.cpp
 
 BIN      = ephemerand
@@ -30,7 +30,7 @@ $(BIN): $(OBJS) $(DEPS)
 
 .PHONY: clean asan
 clean:
-	rm -f $(BIN) *.o *.d miniserial/*.o miniserial/*.d
+	rm -f $(BIN) *.o *.d miniserial/*.o miniserial/*.d hoytech-cpp/*.o hoytech-cpp/*.d
 	rm -rf build/
 
 asan: XCXXFLAGS = -fsanitize=address

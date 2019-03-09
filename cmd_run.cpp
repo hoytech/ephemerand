@@ -4,6 +4,7 @@
 #include <blake2.h>
 
 #include <hoytech/protected_queue.h>
+#include <hoytech/timer.h>
 
 #include "ephemerand/ublox.h"
 #include "ephemerand/gps_utils.h"
@@ -16,9 +17,9 @@ namespace ephemerand {
 
 
 struct SatInfo {
-    uint64_t svprn;
-    uint64_t week;
-    uint64_t time_of_week;
+    uint64_t svprn = 0;
+    uint64_t week = 0;
+    uint64_t time_of_week = 0;
     std::string almanac;
 };
 
@@ -70,6 +71,15 @@ void cmd_run(std::string device, bool verbose) {
 
 
     SatTable sats;
+    std::string curr_rand;
+
+
+    hoytech::timer pollAlmanacTimer;
+
+    pollAlmanacTimer.repeat(5000000, [&]{
+        std::cout << "POLLING ALM" << std::endl;
+        ub.pollAlmanac();
+    });
 
 
     while(1) {
@@ -78,6 +88,7 @@ void cmd_run(std::string device, bool verbose) {
         if (auto m = std::get_if<UbloxMessage_Version>(&msg)) {
             if (verbose) std::cout << "# Connection OK. SW: " << m->software_version << " HW: " << m->hardware_version << std::endl;
             ub.pollAlmanac();
+            pollAlmanacTimer.run();
         } else if (auto m = std::get_if<UbloxMessage_AlmanacMissing>(&msg)) {
             if (verbose) std::cout << "# Almanac missing: " << m->svprn << std::endl;
         } else if (auto m = std::get_if<UbloxMessage_AlmanacData>(&msg)) {
@@ -86,12 +97,21 @@ void cmd_run(std::string device, bool verbose) {
             uint64_t toa = getbitu(buf, 48, 8) * 4096;
             time_t t = decode_gps_time(m->issue_week, toa);
 
-            if (verbose) std::cout << "# Almanac data: " << m->svprn << " issue week: " << m->issue_week << " toa: " << toa << " data: " << to_hex(m->data) << " timestamp: " << t << std::endl;
+            auto &prev = sats[m->svprn];
 
-            sats[m->svprn] = { m->svprn, m->issue_week, toa, m->data };
+            if (prev.svprn != m->svprn || prev.week != m->issue_week || prev.time_of_week != toa || prev.almanac != m->data) {
+                if (verbose) std::cout << "# Almanac data: " << m->svprn << " issue week: " << m->issue_week << " toa: " << toa << " data: " << to_hex(m->data) << " timestamp: " << t << std::endl;
 
-            if (check_sats(sats)) {
-                std::cout << "rand " << to_hex(hash_almanac(sats)) << " " << m->issue_week << " " << toa << std::endl;
+                sats[m->svprn] = { m->svprn, m->issue_week, toa, m->data };
+
+                if (check_sats(sats)) {
+                    std::string hash = hash_almanac(sats);
+
+                    if (hash != curr_rand) {
+                        curr_rand = hash;
+                        std::cout << "rand " << to_hex(curr_rand) << " " << m->issue_week << " " << toa << std::endl;
+                    }
+                }
             }
         }
     }

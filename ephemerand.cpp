@@ -8,7 +8,7 @@
 
 
 namespace ephemerand {
-    void cmd_run(std::string device, bool verbose);
+    void cmd_run(std::string device, bool verbose, bool loop);
     void cmd_reset(std::string device, bool verbose);
 };
 
@@ -17,7 +17,7 @@ static const char USAGE[] =
 R"(ephemerand - global randomness beacon
 
     Usage:
-      ephemerand run [--device=<device>] [--verbose]
+      ephemerand run [--device=<device>] [--verbose] [--loop]
       ephemerand reset [--device=<device>] [--verbose]
       ephemerand decode-gps-time <week> <time_of_week>
       ephemerand (-h | --help)
@@ -28,6 +28,7 @@ R"(ephemerand - global randomness beacon
       --version
       --device=<device>  Serial device to use (default: /dev/ttyACM0)
       --verbose          Print extra information (default: false)
+      --loop             Don't exit. Print new random values as they are generated (default: false)
 )";
 
 
@@ -41,7 +42,10 @@ int parse_command_line(int argc, char **argv) {
     if (args["--verbose"]) verbose = args["--verbose"].asBool();
 
     if (args["run"].asBool()) {
-        ephemerand::cmd_run(device, verbose);
+        bool loop = false;
+        if (args["--loop"]) loop = args["--loop"].asBool();
+
+        ephemerand::cmd_run(device, verbose, loop);
     } else if (args["reset"].asBool()) {
         ephemerand::cmd_reset(device, verbose);
     } else if (args["decode-gps-time"].asBool()) {

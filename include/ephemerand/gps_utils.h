@@ -1,3 +1,5 @@
+#pragma once
+
 // Code in this file adapted from http://www.rtklib.com/
 
 // https://github.com/tomojitakasu/RTKLIB

@@ -14,6 +14,7 @@
 namespace ephemerand {
 
 
+static const uint64_t sats_needed = 31;
 
 
 struct SatInfo {
@@ -27,7 +28,7 @@ using SatTable = std::map<uint64_t, SatInfo>;
 
 
 bool check_sats(SatTable &sats) {
-    if (sats.size() != 31) return false;
+    if (sats.size() != sats_needed) return false;
 
     uint64_t week = 0, time_of_week = 0;
 
@@ -63,7 +64,7 @@ std::string hash_almanac(SatTable &sats) {
 }
 
 
-void cmd_run(std::string device, bool verbose) {
+void cmd_run(std::string device, bool verbose, bool loop) {
     ephemerand::Ublox ub(device);
 
     ub.connect();
@@ -77,7 +78,6 @@ void cmd_run(std::string device, bool verbose) {
     hoytech::timer pollAlmanacTimer;
 
     pollAlmanacTimer.repeat(5000000, [&]{
-        std::cout << "POLLING ALM" << std::endl;
         ub.pollAlmanac();
     });
 
@@ -89,18 +89,22 @@ void cmd_run(std::string device, bool verbose) {
             if (verbose) std::cout << "# Connection OK. SW: " << m->software_version << " HW: " << m->hardware_version << std::endl;
             ub.pollAlmanac();
             pollAlmanacTimer.run();
-        } else if (auto m = std::get_if<UbloxMessage_AlmanacMissing>(&msg)) {
-            if (verbose) std::cout << "# Almanac missing: " << m->svprn << std::endl;
+        } else if (std::get_if<UbloxMessage_AlmanacMissing>(&msg)) {
+            // Ignore
         } else if (auto m = std::get_if<UbloxMessage_AlmanacData>(&msg)) {
             char *buf = m->data.data();
 
             uint64_t toa = getbitu(buf, 48, 8) * 4096;
-            time_t t = decode_gps_time(m->issue_week, toa);
 
             auto &prev = sats[m->svprn];
 
             if (prev.svprn != m->svprn || prev.week != m->issue_week || prev.time_of_week != toa || prev.almanac != m->data) {
-                if (verbose) std::cout << "# Almanac data: " << m->svprn << " issue week: " << m->issue_week << " toa: " << toa << " data: " << to_hex(m->data) << " timestamp: " << t << std::endl;
+                if (verbose) {
+                    std::cout << "# Sat #" << m->svprn
+                              << " (" << sats.size() << "/" << sats_needed << ")"
+                              << " [" << m->issue_week << "." << toa << " -> " << to_hex(m->data) << "]"
+                              << std::endl;
+                }
 
                 sats[m->svprn] = { m->svprn, m->issue_week, toa, m->data };
 
@@ -109,7 +113,14 @@ void cmd_run(std::string device, bool verbose) {
 
                     if (hash != curr_rand) {
                         curr_rand = hash;
-                        std::cout << "rand " << to_hex(curr_rand) << " " << m->issue_week << " " << toa << std::endl;
+                        time_t t = decode_gps_time(m->issue_week, toa);
+
+                        std::cout << "rand " << to_hex(curr_rand)
+                                  << " " << m->issue_week << "." << toa
+                                  << " " << t
+                                  << std::endl;
+
+                        if (!loop) std::exit(0);
                     }
                 }
             }

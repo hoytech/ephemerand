@@ -78,7 +78,6 @@ void cmd_run(std::string device, bool verbose) {
         if (auto m = std::get_if<UbloxMessage_Version>(&msg)) {
             if (verbose) std::cout << "# Connection OK. SW: " << m->software_version << " HW: " << m->hardware_version << std::endl;
             ub.pollAlmanac();
-            ub.pollSubframeBuffer();
         } else if (auto m = std::get_if<UbloxMessage_AlmanacMissing>(&msg)) {
             if (verbose) std::cout << "# Almanac missing: " << m->svprn << std::endl;
         } else if (auto m = std::get_if<UbloxMessage_AlmanacData>(&msg)) {

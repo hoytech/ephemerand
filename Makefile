@@ -9,7 +9,7 @@ LDFLAGS  = -flto $(XLDFLAGS)
 
 SRCS     = ephemerand.cpp util.cpp \
            miniserial/serial.cpp \
-           cmd_run.cpp
+           cmd_run.cpp cmd_reset.cpp
 
 BIN      = ephemerand
 

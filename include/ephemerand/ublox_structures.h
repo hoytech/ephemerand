@@ -181,6 +181,13 @@ PACK(
         uint8_t checksum[2];
 });
 
+PACK(
+    struct CfgMsgPayload {
+        uint8_t message_class;  //!< class of message to request
+        uint8_t message_id;     //!< id of message to request
+        uint8_t checksum[2];
+});
+
 /*!
  * CFG-CFG Message Structure
  * This message clears, saves, or loads novalitle memory.

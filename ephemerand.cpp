@@ -9,6 +9,7 @@
 
 namespace ephemerand {
     void cmd_run(std::string device, bool verbose);
+    void cmd_reset(std::string device, bool verbose);
 };
 
 
@@ -17,27 +18,32 @@ R"(ephemerand - global randomness beacon
 
     Usage:
       ephemerand run [--device=<device>] [--verbose]
+      ephemerand reset [--device=<device>] [--verbose]
       ephemerand decode-gps-time <week> <time_of_week>
       ephemerand (-h | --help)
       ephemerand --version
 
     Options:
-      -h --help     Show this screen.
-      --version     Show version.
+      -h --help
+      --version
+      --device=<device>  Serial device to use (default: /dev/ttyACM0)
+      --verbose          Print extra information (default: false)
 )";
 
 
 int parse_command_line(int argc, char **argv) {
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true, "ephemerand 0.0.1");
 
+    std::string device = "/dev/ttyACM0";
+    if (args["--device"]) device = args["--device"].asString();
+
+    bool verbose = false;
+    if (args["--verbose"]) verbose = args["--verbose"].asBool();
+
     if (args["run"].asBool()) {
-        std::string device = "/dev/ttyACM0";
-        if (args["--device"]) device = args["--device"].asString();
-
-        bool verbose = false;
-        if (args["--verbose"]) verbose = args["--verbose"].asBool();
-
         ephemerand::cmd_run(device, verbose);
+    } else if (args["reset"].asBool()) {
+        ephemerand::cmd_reset(device, verbose);
     } else if (args["decode-gps-time"].asBool()) {
         time_t t = decode_gps_time(args["<week>"].asLong(), args["<time_of_week>"].asLong());
         std::cout << t << std::endl;

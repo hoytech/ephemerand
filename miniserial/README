@@ -1,0 +1,9 @@
+This is a stripped down version of the serial library available here:
+
+https://github.com/wjwwood/serial
+
+The original authors are: William Woodall <wjwwood@gmail.com> John Harrison <ash.gti@gmail.com>
+
+Modifications made:
+  * Buildable without custom build system
+  * Fixed a couple compiler warnings

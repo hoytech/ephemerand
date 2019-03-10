@@ -1,6 +1,64 @@
 # ephemerand
 
-global randomness beacon
+**ephemerand** is an experimental approach to generating a globally-consistent randomness beacon.
+
+Once every day, the US military takes various measurements of the satellites in the [GPS](https://en.wikipedia.org/wiki/Global_Positioning_System) constellation. These measurements include:
+
+* Satellite ephemeris (information about orbit)
+  * Inclination
+  * Eccentricity
+  * Argument of perigee
+* Clock skew
+* Ionospheric noise
+
+The `ephemerand` program collects these almanacs from a GPS receiver, hashes them with BLAKE-2b, and then outputs the result.
+
+Any device with a ublox chipset should work. I've tested [this](https://www.amazon.com/Stratux-Vk-162-Remote-Mount-USB/dp/B01EROIUEW/) and [this](https://www.amazon.ca/gp/product/B077G5KBNV).
+
+See the [slides of my ETH UofT hackathon entry](https://hoytech.github.io/presentations/ephemerand/) for more details.
+
+
+## Building
+
+So far only tested on linux (Ubuntu 18.04).
+
+Init the submodules:
+
+    git submodule update --init
+
+Install dependencies:
+
+    sudo apt-get install build-essential g++ libb2-dev libdocopt-dev
+
+Build (requires C++17 compiler):
+
+    make
+
+
+## Running
+
+Plug in your GPS device, then run:
+
+    sudo ./ephemerand run --verbose
+
+If you see version information from your device then it connected OK:
+
+    # Connection OK. SW: 1.00 (59842) HW: 00070000
+
+If you wait for a bit you'll see it pick up satellites (make sure the sky is in view):
+
+    # Sat #32 (1/31) [2044.147456 -> 24166000920924000054fd00b80da1006e9413009f3b96006a77f500b400e700]
+    # Sat #31 (2/31) [2044.147456 -> 9a4b5f00a20b24000046fd00350ca1004dbe3f0061b9ff009a905600fcff0600]
+    # Sat #30 (3/31) [2044.147456 -> af1e5e0032ff24000034fd007e0ca100dd604000c7e4840014796700c8fff700]
+    # Sat #29 (4/31) [2044.147456 -> 62065d00121c24000065fd001c0ca100b37c9600f2e33a00709efa00c0ff2100]
+
+After all 31 satellites are picked up you'll get the current day's random number:
+
+    rand 0936e456684b04edd449bad5c8aba51e28a5adc98d4f20e560af668644f23665 2044.147456 1552323456
+
+The first parameter after `rand` is the random value. The next is the GPS week and GPS time of week that the almanac is applicable for, separated by `.`. The next is the GPS week/time converted to a unix timestamp. 
+
+
 
 ## Motivation
 
@@ -21,7 +79,7 @@ Another approach is to have all the participants who have an interest in the ran
 
 ### Variable Delay Functions
 
-A [https://vdfresearch.org/](Variable Delay Function) is a function that takes a very long time to compute and cannot be computed in parallel. The input from one of the above schemes can be fed into a VDF, and people can commit to being bound by the final result of the VDF before it is possible that anybody could compute it. Then somebody goes ahead working on computing the VDF to produce the final random value. Ideally the VDF can be verified to be computed correctly in less time than it took to compute it. Most currently-known VDFs require trusted setups, and tuning the delay parameter requires careful tuning (possibly needing specialized hardware as a benchmark).
+A [Variable Delay Function](https://vdfresearch.org/) is a function that takes a very long time to compute and cannot be computed in parallel. The output from one of the above schemes is generated and fed as input into the VDF. Next, people commit to being bound by the final result of the VDF before it is possible that anybody could have computed it. Then, in parallel, somebody goes ahead working on computing the VDF to produce the final random value. Ideally the output VDF is then verified by everyone in less time than it took to compute it originally. Most currently-known VDFs require trusted setups, and tuning the delay parameter requires careful tuning (possibly needing specialized hardware as a benchmark).
 
 ### NIST randomness beacon
 

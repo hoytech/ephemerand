@@ -32,7 +32,7 @@ Install dependencies:
 
 Build (requires C++17 compiler):
 
-    make
+    make -j
 
 
 ## Running
@@ -67,8 +67,6 @@ In decentralised systems there is often a need for random numbers. Despite the s
 * **Unpredictable**: Nobody should be able to predict the number in advance.
 * **Unbiasable**: Nobody should be able to influence number.
 
-## Survey of approaches
-
 ### Block-hashes
 
 In a blockchain system such as Bitcoin, collections of transactions are grouped into blocks and then hashed. Since these blocks are replicated across the world, they can be used as randomness beacons, however there are [many caveats to be aware of](https://blog.positive.com/predicting-random-numbers-in-ethereum-smart-contracts-e5358c6b8620). For instance, the miner who constructs the block can influence the randomness by choosing to not publish the block if the blockhash is disadvantageous. In non-Proof-of-Work blockchains this problem is even worse, since a miner may be able to rapidly construct many valid blocks and suggest the one that has the most advantageous hash.
@@ -79,7 +77,7 @@ Another approach is to have all the participants who have an interest in the ran
 
 ### Variable Delay Functions
 
-A [Variable Delay Function](https://vdfresearch.org/) is a function that takes a very long time to compute and cannot be computed in parallel. The output from one of the above schemes is generated and fed as input into the VDF. Next, people commit to being bound by the final result of the VDF before it is possible that anybody could have computed it. Then, in parallel, somebody goes ahead working on computing the VDF to produce the final random value. Ideally the output VDF is then verified by everyone in less time than it took to compute it originally. Most currently-known VDFs require trusted setups, and tuning the delay parameter requires careful tuning (possibly needing specialized hardware as a benchmark).
+A [Variable Delay Function](https://vdfresearch.org/) is a function that takes a very long time to compute and cannot be parallelized. The output from one of the above schemes is generated and fed as input into the VDF. Next, people commit to being bound by the final result of the VDF. Then somebody goes ahead working on computing the VDF to produce the final random value. Ideally the output VDF can then verified by everyone in less time than it took to compute it originally. Most currently-known VDFs require trusted setups, and tuning the delay parameter requires careful tuning (possibly needing specialized hardware as a benchmark).
 
 ### NIST randomness beacon
 

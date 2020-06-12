@@ -11,11 +11,13 @@ Once every day, the US military takes various measurements of the satellites in 
 * Clock skew
 * Ionospheric noise
 
-The `ephemerand` program collects these almanacs from a GPS receiver, hashes them with BLAKE-2b, and then outputs the result.
+The `ephemerand` program collects these almanacs from a GPS receiver, hashes them, and then outputs the result.
 
 Any device with a ublox chipset should work. I've tested [this](https://www.amazon.com/Stratux-Vk-162-Remote-Mount-USB/dp/B01EROIUEW/) and [this](https://www.amazon.ca/gp/product/B077G5KBNV).
 
 See the [slides of my ETH UofT hackathon entry](https://hoytech.github.io/presentations/ephemerand/) for more details.
+
+My blockchain security course has some introductory slides about [on-chain randomness generation](https://hoytech.github.io/blockchain-security/lesson4/index.html#/21).
 
 
 ## Building
@@ -65,7 +67,11 @@ The first parameter after `rand` is the random value. The next is the GPS week a
 In decentralised systems there is often a need for random numbers. Despite the system participants not trusting one another, the following properties are required:
 
 * **Unpredictable**: Nobody should be able to predict the number in advance.
-* **Unbiasable**: Nobody should be able to influence number.
+* **Unbiasable**: Nobody should be able to influence the number.
+
+### Real-world values
+
+The whole world is full of random numbers. For example, you could flip a coin a bunch of times. The challenge is proving to everyone else that somebody has honestly recorded them, and distributing them to all the participants. With this in mind, people have suggested using [financial data](https://eprint.iacr.org/2010/361), [national lotteries](https://en.bitcoin.it/wiki/Proof_of_burn), and more.
 
 ### Block-hashes
 
@@ -73,16 +79,12 @@ In a blockchain system such as Bitcoin, collections of transactions are grouped 
 
 ### Commit-reveal
 
-Another approach is to have all the participants who have an interest in the random value to submit a hash of their own personally generated random number. After everybody has comitted to their hashes, they then reveal their personally generated random numbers. Every participant verifies everyone else's comitted hashes were computed properly, and then combines the random values into a final random number. Similar to block-hashes, the last participant to reveal can choose to not reveal if the final random number is disadvantageous.
+Another approach is to have all the participants who have an interest in the random value to submit a hash of their own personally generated random number. After everybody has comitted to their hashes, they then reveal their personally generated random numbers. Every participant verifies everyone else's comitted hashes were computed properly, and then combines the random values into a final random number. Similar to block-hashes, the last participant to reveal can choose to not reveal if the final random number is disadvantageous, so there usually needs to be some sort of punishment for not revealing. There are schemes to combine the randomness from multiple participants (ie [RANDAO](https://github.com/randao/randao)), but these usually influencable by (at least) the last revealer.
 
-### Variable Delay Functions
+### Verifiable Delay Functions
 
-A [Variable Delay Function](https://vdfresearch.org/) is a function that takes a very long time to compute and cannot be parallelized. The output from one of the above schemes is generated and fed as input into the VDF. Next, people commit to being bound by the final result of the VDF. Then somebody goes ahead working on computing the VDF to produce the final random value. Ideally the output VDF can then verified by everyone in less time than it took to compute it originally. Most currently-known VDFs require trusted setups, and tuning the delay parameter requires careful tuning (possibly needing specialized hardware as a benchmark).
+A [Verifiable Delay Functions](https://vdfresearch.org/) is a function that takes a very long time to compute and cannot be parallelized, but can be verified in a much shorter amount of time. The output from some less-than secure randomness source (ie blockhash, or RANDAO) is fed as input into the VDF. Next, people commit to being bound by the final result of the VDF. The deadline for comitting to this output must be before anybody could feasible compute the VDF output. Eventually, the final random value is computed and it can be quickly verified by everyone in much less time than it took to compute originally. Most currently-known VDFs require trusted setups, and tuning the delay parameter requires careful tuning (possibly needing specialized hardware as a benchmark, and adjustment over time).
 
 ### NIST randomness beacon
 
 The [NIST randomness beacon](https://www.nist.gov/programs-projects/nist-randomness-beacon) is a system that periodically broadcasts randomly-generated values over the internet, signing with NIST's private key to ensure it hasn't been tampered with. Of course to rely on this you need to trust that NIST is generating the random values honestly.
-
-### Real-world values
-
-The whole world is full of random numbers. For example, you could flip a coin a bunch of times. The challenge is proving to everyone else that somebody has honestly recorded them, and distributing them to all the participants. With this in mind, people have suggested using [financial data](https://eprint.iacr.org/2010/361), [national lotteries](https://en.bitcoin.it/wiki/Proof_of_burn), and more.

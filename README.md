@@ -1,6 +1,6 @@
-# ephemerand
+# Ephemerand
 
-**ephemerand** is an experimental approach to generating a globally-consistent randomness beacon.
+**Ephemerand** is an experimental approach to generating a globally-consistent randomness beacon.
 
 Once every day, the US military takes various measurements of the satellites in the [GPS](https://en.wikipedia.org/wiki/Global_Positioning_System) constellation. These measurements include:
 
@@ -17,7 +17,7 @@ Any device with a ublox chipset should work. I've tested [this](https://www.amaz
 
 See the [slides of my ETH UofT hackathon entry](https://hoytech.github.io/presentations/ephemerand/) for more details.
 
-My blockchain security course has some introductory slides about [on-chain randomness generation](https://hoytech.github.io/blockchain-security/lesson4/index.html#/21).
+Ephemerand is a [Log Periodic](https://logperiodic.com) project.
 
 
 ## Building

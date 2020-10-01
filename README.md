@@ -2,7 +2,7 @@
 
 **Ephemerand** is an experimental approach to generating a globally-consistent randomness beacon.
 
-Once every day, the US military takes various measurements of the satellites in the [GPS](https://en.wikipedia.org/wiki/Global_Positioning_System) constellation. These measurements include:
+Once every day, the US military takes various measurements of the satellites in the [GPS](https://en.wikipedia.org/wiki/Global_Positioning_System) constellation and bundles them into an "almanac". These measurements include:
 
 * Satellite ephemeris (information about orbit)
   * Inclination
@@ -13,7 +13,7 @@ Once every day, the US military takes various measurements of the satellites in 
 
 The `ephemerand` program collects these almanacs from a GPS receiver, hashes them, and then outputs the result.
 
-Any device with a ublox chipset should work. I've tested [this](https://www.amazon.com/Stratux-Vk-162-Remote-Mount-USB/dp/B01EROIUEW/) and [this](https://www.amazon.ca/gp/product/B077G5KBNV).
+Any device with a ublox chipset should work. I've tested [this](https://www.amazon.com/Stratux-Vk-162-Remote-Mount-USB/dp/B01EROIUEW/) and [this](https://www.amazon.com/Diymall-G-Mouse-Glonass-Raspberry-Aviation/dp/B00NWEEWW8/).
 
 See the [slides of my ETH UofT hackathon entry](https://hoytech.github.io/presentations/ephemerand/) for more details.
 
@@ -83,8 +83,8 @@ Another approach is to have all the participants who have an interest in the ran
 
 ### Verifiable Delay Functions
 
-A [Verifiable Delay Functions](https://vdfresearch.org/) is a function that takes a very long time to compute and cannot be parallelized, but can be verified in a much shorter amount of time. The output from some less-than secure randomness source (ie blockhash, or RANDAO) is fed as input into the VDF. Next, people commit to being bound by the final result of the VDF. The deadline for comitting to this output must be before anybody could feasible compute the VDF output. Eventually, the final random value is computed and it can be quickly verified by everyone in much less time than it took to compute originally. Most currently-known VDFs require trusted setups, and tuning the delay parameter requires careful tuning (possibly needing specialized hardware as a benchmark, and adjustment over time).
+A [Verifiable Delay Function](https://vdfresearch.org/) is a function that takes a very long time to compute and cannot be parallelized, but can be verified in a much shorter amount of time. The output from some less-than secure randomness source (ie blockhash, or RANDAO) is fed as input into the VDF. Next, people commit to being bound by the final result of the VDF. The deadline for comitting to this output must be before anybody could feasible compute the VDF output. Eventually, the final random value is computed and it can be quickly verified by everyone in much less time than it took to compute originally. Most currently-known VDFs require trusted setups, and tuning the delay parameter requires careful tuning (possibly needing specialized hardware as a benchmark, and adjustment over time).
 
 ### NIST randomness beacon
 
-The [NIST randomness beacon](https://www.nist.gov/programs-projects/nist-randomness-beacon) is a system that periodically broadcasts randomly-generated values over the internet, signing with NIST's private key to ensure it hasn't been tampered with. Of course to rely on this you need to trust that NIST is generating the random values honestly.
+The [NIST randomness beacon](https://www.nist.gov/programs-projects/nist-randomness-beacon) is a system that periodically broadcasts randomly-generated values over the internet, signing with NIST's private key to ensure it hasn't been tampered with. Of course to rely on this you need to trust that NIST is generating the random values honestly and they securely handle their private key.
